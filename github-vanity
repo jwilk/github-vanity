@@ -38,7 +38,7 @@ def create_cache_dir():
 
 def format_user_name(user):
     template = '<{login}>'
-    if 'name' in user:
+    if user.get('name') is not None:
         template = '{name} ' + template
     return template.format(**user)
 
