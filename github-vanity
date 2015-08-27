@@ -127,7 +127,7 @@ class Dumper(object):
     def get(self, url):
         return self._get(url)['data']
 
-    def get_list(self, url, per_page=10):
+    def get_list(self, url, per_page=100):
         url = '{url}?per_page={n}'.format(url=url, n=per_page)
         data = []
         while True:
