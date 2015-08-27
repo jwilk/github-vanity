@@ -24,6 +24,7 @@ import argparse
 import errno
 import fcntl
 import json
+import logging
 import operator
 import os
 import sys
@@ -165,7 +166,11 @@ def main():
     if int(requests.__version__.split('.')[0]) < 1:
         raise NotImplementedError('requests >= 1.0 is required')
     if options.debug:
-        urllib3.add_stderr_logger()
+        logging.basicConfig()
+        for mod in ['urllib3', 'requests.packages.urllib3']:
+            logger = logging.getLogger(mod)
+            logger.setLevel(logging.DEBUG)
+            logger.propagate = True
     with Dumper() as dumper:
         dumper.dump(options.user)
 
