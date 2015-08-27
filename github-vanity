@@ -123,7 +123,7 @@ class Dumper(object):
 
     def dump_followers(self, login):
         print('followers:')
-        url = 'https://api.github.com/users/{login}/followers'.format(login=login)
+        url = 'https://api.github.com/users/{login}/followers?per_page=100'.format(login=login)
         followers = self.get(url)
         followers = sorted(followers, key=operator.itemgetter('login'))
         for follower in followers:
@@ -134,7 +134,7 @@ class Dumper(object):
     def dump_repositories(self, login):
         print('repositories:')
         print()
-        url = 'https://api.github.com/users/{login}/repos'.format(login=login)
+        url = 'https://api.github.com/users/{login}/repos?per_page=100'.format(login=login)
         repos = self.get(url)
         repos = sorted(repos, key=operator.itemgetter('name'))
         for repo in repos:
