@@ -21,6 +21,7 @@
 # SOFTWARE.
 
 import argparse
+import concurrent.futures
 import errno
 import fcntl
 import json
@@ -30,6 +31,8 @@ import os
 import sys
 
 import requests
+
+max_workers = 8
 
 prog = os.path.basename(sys.argv[0])
 
@@ -127,6 +130,11 @@ class Dumper(object):
     def get(self, url):
         return self._get(url)['data']
 
+    def async_get(self, urls):
+        with concurrent.futures.ThreadPoolExecutor(max_workers=max_workers) as executor:
+            for data in executor.map(self.get, urls):
+                yield data
+
     def get_list(self, url, per_page=100):
         url = '{url}?per_page={n}'.format(url=url, n=per_page)
         data = []
@@ -143,13 +151,21 @@ class Dumper(object):
         url = 'https://api.github.com/users/{login}'.format(login=login)
         return self.get(url)
 
+    def async_get_users(self, logins):
+        with concurrent.futures.ThreadPoolExecutor(max_workers=max_workers) as executor:
+            for user in executor.map(self.get_user, logins):
+                yield user
+
     def dump_followers(self, login):
         print('followers:')
         url = 'https://api.github.com/users/{login}/followers'.format(login=login)
         followers = self.get_list(url)
         followers = sorted(followers, key=operator.itemgetter('login'))
-        for follower in followers:
-            user = self.get_user(follower['login'])
+        users = self.async_get_users(
+            follower['login']
+            for follower in followers
+        )
+        for user in users:
             print('-', format_user_name(user))
         print()
 
@@ -159,9 +175,10 @@ class Dumper(object):
         url = 'https://api.github.com/users/{login}/repos'.format(login=login)
         repos = self.get_list(url)
         repos = sorted(repos, key=operator.itemgetter('name'))
-        for repo in repos:
-            url = repo['stargazers_url']
-            followers = self.get(url)
+        repos_followers = self.async_get(
+            repo['stargazers_url'] for repo in repos
+        )
+        for repo, followers in zip(repos, repos_followers):
             followers = [
                 fw for fw in followers
                 if fw['login'] != login
