@@ -93,30 +93,52 @@ class Dumper(object):
             os.close(self.lock_fd)
             os.lock_fd = None
 
-    def get(self, url):
+    def _get(self, url, needs=()):
         headers = {}
         try:
             cached = self.cache[url]
+            for need in needs:
+                cached[need]
         except KeyError:
             pass
         else:
             headers['If-None-Match'] = cached['etag']
         response = self.session.get(url, headers=headers)
         if response.status_code == 304:
-            return cached['data']
+            return cached
         result = response.json()
         try:
             if response.status_code >= 400:
                 response.reason = result['message']
         finally:
             response.raise_for_status()
+        result = dict(
+            data=result,
+            links=response.links,
+        )
         try:
             etag = response.headers['ETag']
         except KeyError:
             pass
         else:
-            self.cache[url] = dict(etag=etag, data=result)
+            result['etag'] = etag
+            self.cache[url] = result
         return result
+
+    def get(self, url):
+        return self._get(url)['data']
+
+    def get_list(self, url, per_page=10):
+        url = '{url}?per_page={n}'.format(url=url, n=per_page)
+        data = []
+        while True:
+            result = self._get(url, needs={'links'})
+            data += result['data']
+            try:
+                url = result['links']['next']['url']
+            except KeyError:
+                break
+        return data
 
     def get_user(self, login):
         url = 'https://api.github.com/users/{login}'.format(login=login)
@@ -124,8 +146,8 @@ class Dumper(object):
 
     def dump_followers(self, login):
         print('followers:')
-        url = 'https://api.github.com/users/{login}/followers?per_page=100'.format(login=login)
-        followers = self.get(url)
+        url = 'https://api.github.com/users/{login}/followers'.format(login=login)
+        followers = self.get_list(url)
         followers = sorted(followers, key=operator.itemgetter('login'))
         for follower in followers:
             user = self.get_user(follower['login'])
@@ -135,8 +157,8 @@ class Dumper(object):
     def dump_repositories(self, login):
         print('repositories:')
         print()
-        url = 'https://api.github.com/users/{login}/repos?per_page=100'.format(login=login)
-        repos = self.get(url)
+        url = 'https://api.github.com/users/{login}/repos'.format(login=login)
+        repos = self.get_list(url)
         repos = sorted(repos, key=operator.itemgetter('name'))
         for repo in repos:
             url = repo['stargazers_url']
