@@ -84,8 +84,9 @@ class Dumper(object):
         if self.lock_fd is None:
             return
         try:
-            with open(self.cache_path, 'wt', encoding='UTF-8') as fp:
+            with open(self.cache_path + '.tmp', 'wt', encoding='UTF-8') as fp:
                 json.dump(self.cache, fp)
+            os.rename(self.cache_path + '.tmp', self.cache_path)
             self.cache = None
         finally:
             os.close(self.lock_fd)
