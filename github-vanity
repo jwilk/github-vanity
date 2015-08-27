@@ -21,12 +21,17 @@
 # SOFTWARE.
 
 import argparse
+import errno
+import fcntl
 import json
 import operator
 import os
+import sys
 
 import requests
 import urllib3
+
+prog = os.path.basename(sys.argv[0])
 
 def create_cache_dir():
     path = os.getenv('XDG_CACHE_HOME')
@@ -49,19 +54,42 @@ class Dumper(object):
         self.session.verify = True
         self.session.trust_env = False
         self.session.headers['User-Agent'] = 'github-vanity (https://github.com/jwilk/github-vanity)'
-        self.cache_path = os.path.join(create_cache_dir(), 'cache.json')
+        self.cache_dir = create_cache_dir()
+        self.cache_path = os.path.join(self.cache_dir, 'cache.json')
+        self.cache = None
+        self.lock_fd = None
+
+    def __enter__(self):
+        if self.lock_fd is not None:
+            raise RuntimeError('{self!r} is already locked'.format(self=self))
+        self.lock_fd = os.open(self.cache_dir, os.O_RDONLY)
+        try:
+            fcntl.flock(self.lock_fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
+        except IOError as exc:
+            if exc.errno == errno.EWOULDBLOCK:
+                print('{prog}: waiting for the lock...'.format(prog=prog), end='', file=sys.stderr)
+                sys.stderr.flush()
+                fcntl.flock(self.lock_fd, fcntl.LOCK_EX)
+                print('', file=sys.stderr)
+            else:
+                raise
         try:
             with open(self.cache_path, 'rt', encoding='UTF-8') as fp:
                 self.cache = json.load(fp)
         except FileNotFoundError:
             self.cache = {}
+        return self
 
-    def close(self):
-        if self.cache is None:
+    def __exit__(self, *exc_info):
+        if self.lock_fd is None:
             return
-        with open(self.cache_path, 'wt', encoding='UTF-8') as fp:
-            json.dump(self.cache, fp)
-        self.cache = None
+        try:
+            with open(self.cache_path, 'wt', encoding='UTF-8') as fp:
+                json.dump(self.cache, fp)
+            self.cache = None
+        finally:
+            os.close(self.lock_fd)
+            os.lock_fd = None
 
     def get(self, url):
         headers = {}
@@ -137,11 +165,8 @@ def main():
         raise NotImplementedError('requests >= 1.0 is required')
     if options.debug:
         urllib3.add_stderr_logger()
-    dumper = Dumper()
-    try:
+    with Dumper() as dumper:
         dumper.dump(options.user)
-    finally:
-        dumper.close()
 
 if __name__ == '__main__':
     main()
