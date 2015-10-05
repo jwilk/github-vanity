@@ -175,20 +175,25 @@ class Dumper(object):
         url = 'https://api.github.com/users/{login}/repos'.format(login=login)
         repos = self.get_list(url)
         repos = sorted(repos, key=operator.itemgetter('name'))
-        repos_followers = self.async_get(
+        repos_stargazers = self.async_get(
             repo['stargazers_url'] for repo in repos
         )
-        for repo, followers in zip(repos, repos_followers):
-            followers = [
-                fw for fw in followers
-                if fw['login'] != login
-            ]
+        repos_subscribers = self.async_get(
+            repo['subscribers_url'] for repo in repos
+        )
+        for repo, stargazers, subscribers in zip(repos, repos_stargazers, repos_subscribers):
+            def userset(users):
+                return {
+                    u['login']
+                    for u in users
+                    if u['login'] != login
+                }
+            followers = userset(stargazers) | userset(subscribers)
             if not followers:
                 continue
-            followers = sorted(followers, key=operator.itemgetter('login'))
             print('  {repo}:'.format(repo=repo['name']))
-            for follower in followers:
-                follower = self.get_user(follower['login'])
+            for follower in sorted(followers):
+                follower = self.get_user(follower)
                 print('   -', format_user_name(follower))
             print()
 
