@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 
-# Copyright © 2013-2015 Jakub Wilk <jwilk@jwilk.net>
+# Copyright © 2013-2016 Jakub Wilk <jwilk@jwilk.net>
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the “Software”), to deal
@@ -24,14 +24,16 @@ import argparse
 import concurrent.futures
 import errno
 import fcntl
+import http.client
 import json
 import logging
 import operator
 import os
+import re
 import sys
+import urllib.request
 
-import requests
-
+user_agent = 'github-vanity (https://github.com/jwilk/github-vanity)'
 max_workers = 8
 
 prog = os.path.basename(sys.argv[0])
@@ -53,10 +55,6 @@ def format_user_name(user):
 class Dumper(object):
 
     def __init__(self):
-        self.session = requests.Session()
-        self.session.verify = True
-        self.session.trust_env = False
-        self.session.headers['User-Agent'] = 'github-vanity (https://github.com/jwilk/github-vanity)'
         self.cache_dir = create_cache_dir()
         self.cache_path = os.path.join(self.cache_dir, 'cache.json')
         self.cache = None
@@ -95,8 +93,25 @@ class Dumper(object):
             os.close(self.lock_fd)
             os.lock_fd = None
 
+    def _parse_link_header(self, link_header):
+        if link_header is None:
+            return {}
+        items = re.split(r',\s+(?=<)', link_header)
+        result = {}
+        for item in items:
+            match = re.match(r'\A<([^>]+)>; rel="(\w+)"\Z', item)
+            (url, rel) = match.groups()
+            result[rel] = dict(url=url, rel=rel)
+        return result
+
+    def _read_json(self, fp):
+        with fp:
+            data = fp.read()
+            data = data.decode('UTF-8')
+            return json.loads(data)
+
     def _get(self, url, needs=()):
-        headers = {}
+        headers = {'User-Agent': user_agent}
         try:
             cached = self.cache[url]
             for need in needs:
@@ -105,24 +120,24 @@ class Dumper(object):
             pass
         else:
             headers['If-None-Match'] = cached['etag']
-        response = self.session.get(url, headers=headers)
-        if response.status_code == 304:
-            return cached
-        result = response.json()
+        request = urllib.request.Request(url, headers=headers)
         try:
-            if response.status_code >= 400:
-                response.reason = result['message']
-        finally:
-            response.raise_for_status()
+            response = urllib.request.urlopen(request)
+        except urllib.error.HTTPError as exc:
+            if exc.code == 304:
+                return cached
+            elif exc.code >= 400:
+                data = self._read_json(exc.file)
+                exc.msg = data['message']
+            raise
+        data = self._read_json(response)
+        links = self._parse_link_header(response.headers['Link'])
         result = dict(
-            data=result,
-            links=response.links,
+            data=data,
+            links=links,
         )
-        try:
-            etag = response.headers['ETag']
-        except KeyError:
-            pass
-        else:
+        etag = response.headers['ETag']
+        if etag is not None:
             result['etag'] = etag
             self.cache[url] = result
         return result
@@ -206,14 +221,8 @@ def main():
     ap.add_argument('--debug', action='store_true')
     ap.add_argument('user', metavar='<user>')
     options = ap.parse_args()
-    if int(requests.__version__.split('.')[0]) < 1:
-        raise NotImplementedError('requests >= 1.0 is required')
     if options.debug:
-        logging.basicConfig()
-        for mod in ['urllib3', 'requests.packages.urllib3']:
-            logger = logging.getLogger(mod)
-            logger.setLevel(logging.DEBUG)
-            logger.propagate = True
+        http.client.HTTPConnection.debuglevel = 1
     with Dumper() as dumper:
         dumper.dump(options.user)
 
