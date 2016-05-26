@@ -59,6 +59,12 @@ class Dumper(object):
         self.cache_path = os.path.join(self.cache_dir, 'cache.json')
         self.cache = None
         self.lock_fd = None
+        try:
+            token = os.environ['GITHUB_VANITY_TOKEN']
+        except KeyError:
+            self.authorization = None
+        else:
+            self.authorization = 'token ' + token
 
     def __enter__(self):
         if self.lock_fd is not None:
@@ -112,6 +118,8 @@ class Dumper(object):
 
     def _get(self, url, needs=()):
         headers = {'User-Agent': user_agent}
+        if self.authorization is not None:
+            headers['Authorization'] = self.authorization
         try:
             cached = self.cache[url]
             for need in needs:
