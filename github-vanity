@@ -26,7 +26,6 @@ import errno
 import fcntl
 import http.client
 import json
-import logging
 import operator
 import os
 import re
