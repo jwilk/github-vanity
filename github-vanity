@@ -38,7 +38,7 @@ max_workers = 8
 prog = os.path.basename(sys.argv[0])
 
 def create_cache_dir():
-    path = os.getenv('XDG_CACHE_HOME')
+    path = os.getenv('XDG_CACHE_HOME', '')
     if not path.startswith('/'):
         path = os.path.join(os.path.expanduser('~'), '.cache')
     path = os.path.join(path, 'github-vanity')
