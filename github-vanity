@@ -232,7 +232,7 @@ class Dumper(object):
                 continue
             print('  {repo}:'.format(repo=repo_name))
             for user in users:
-                print('   -', user)
+                print('  -', user)
             print()
 
     def dump(self, login):
