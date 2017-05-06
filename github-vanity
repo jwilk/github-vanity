@@ -182,13 +182,19 @@ class Dumper(object):
         print('followers:')
         url = 'https://api.github.com/users/{login}/followers'.format(login=login)
         followers = self.get_list(url)
-        followers = sorted(followers, key=operator.itemgetter('login'))
         users = self.async_get_users(
             follower['login']
             for follower in followers
         )
+        users = sorted(users, key=operator.itemgetter('login'))
+        users = [
+            format_user_name(user)
+            for user in users
+        ]
+        self.cache.setdefault('#user', {})
+        self.cache['#user'][login] = users
         for user in users:
-            print('-', format_user_name(user))
+            print('-', user)
         print()
 
     def dump_repositories(self, login):
@@ -210,13 +216,23 @@ class Dumper(object):
                     for u in users
                     if u['login'] != login
                 }
-            followers = userset(stargazers) | userset(subscribers)
-            if not followers:
+            users = self.async_get_users(
+                userset(stargazers) | userset(subscribers)
+            )
+            users = sorted(users, key=operator.itemgetter('login'))
+            users = [
+                format_user_name(user)
+                for user in users
+            ]
+            repo_name = repo['name']
+            self.cache.setdefault('#repo', {})
+            self.cache['#repo'].setdefault(login, {})
+            self.cache['#repo'][login][repo_name] = users
+            if not users:
                 continue
-            print('  {repo}:'.format(repo=repo['name']))
-            for follower in sorted(followers):
-                follower = self.get_user(follower)
-                print('   -', format_user_name(follower))
+            print('  {repo}:'.format(repo=repo_name))
+            for user in users:
+                print('   -', user)
             print()
 
     def dump(self, login):
