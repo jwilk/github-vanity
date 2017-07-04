@@ -169,6 +169,11 @@ class Dumper(object):
                 break
         return data
 
+    def async_get_lists(self, urls):
+        with concurrent.futures.ThreadPoolExecutor(max_workers=max_workers) as executor:
+            for data in executor.map(self.get_list, urls):
+                yield data
+
     def get_user(self, login):
         url = 'https://api.github.com/users/{login}'.format(login=login)
         return self.get(url)
@@ -203,10 +208,10 @@ class Dumper(object):
         url = 'https://api.github.com/users/{login}/repos'.format(login=login)
         repos = self.get_list(url)
         repos = sorted(repos, key=operator.itemgetter('name'))
-        repos_stargazers = self.async_get(
+        repos_stargazers = self.async_get_lists(
             repo['stargazers_url'] for repo in repos
         )
-        repos_subscribers = self.async_get(
+        repos_subscribers = self.async_get_lists(
             repo['subscribers_url'] for repo in repos
         )
         for repo, stargazers, subscribers in zip(repos, repos_stargazers, repos_subscribers):
