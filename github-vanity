@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# encoding=UTF-8
 
 # Copyright © 2013-2017 Jakub Wilk <jwilk@jwilk.net>
 #
@@ -31,6 +32,8 @@ import os
 import re
 import sys
 import urllib.request
+
+lambda: (yield from 0)  # Python >= 3.3 is required
 
 user_agent = 'github-vanity (https://github.com/jwilk/github-vanity)'
 max_workers = 8
