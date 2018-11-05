@@ -250,7 +250,7 @@ class Dumper(object):
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument('--debug', action='store_true')
-    ap.add_argument('user', metavar='<user>')
+    ap.add_argument('user', metavar='USER')
     options = ap.parse_args()
     if options.debug:
         http.client.HTTPConnection.debuglevel = 1
