@@ -16,5 +16,8 @@ script:
 - export PYTHONWARNINGS=d
 - ./github-vanity --help
 - ./github-vanity bedevere-bot
+cache:
+  directories:
+  - $HOME/.cache/github-vanity
 
 # vim:ts=2 sts=2 sw=2 et
