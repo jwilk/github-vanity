@@ -127,8 +127,11 @@ class Dumper(object):
         else:
             headers['If-None-Match'] = cached['etag']
         request = urllib.request.Request(url, headers=headers)
+        ca_options = {}
+        if sys.version_info < (3, 4, 3):
+            ca_options.update(cadefault=True)
         try:
-            response = urllib.request.urlopen(request, cadefault=True)
+            response = urllib.request.urlopen(request, **ca_options)
         except urllib.error.HTTPError as exc:
             if exc.code == 304:
                 return cached
