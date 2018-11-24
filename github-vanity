@@ -136,7 +136,7 @@ class Dumper(object):
             if exc.code == 304:
                 return cached
             elif exc.code >= 400:
-                data = self._read_json(exc.file)
+                data = self._read_json(exc)
                 exc.msg = data['message']
             raise
         data = self._read_json(response)
