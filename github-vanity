@@ -53,7 +53,7 @@ def format_user_name(user):
         template = '{name} ' + template
     return template.format(**user)
 
-class Dumper(object):
+class Dumper():
 
     def __init__(self):
         self.cache_dir = create_cache_dir()
