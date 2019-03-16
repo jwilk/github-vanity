@@ -121,7 +121,7 @@ class Dumper():
         try:
             cached = self.cache[url]
             for need in needs:
-                cached[need]
+                cached[need]  # pylint: disable=pointless-statement
         except KeyError:
             pass
         else:
