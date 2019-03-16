@@ -135,7 +135,7 @@ class Dumper():
         except urllib.error.HTTPError as exc:
             if exc.code == 304:
                 return cached
-            elif exc.code >= 400:
+            if exc.code >= 400:
                 data = self._read_json(exc)
                 exc.msg = data['message']
             raise
