@@ -1,7 +1,9 @@
 language: python
+dist: xenial
 jobs:
   include:
   - python: "3.3"
+    dist: trusty
   - python: "3.4"
   - python: "3.5"
   - python: "3.6"
