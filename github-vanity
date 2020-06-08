@@ -24,11 +24,13 @@
 import argparse
 import concurrent.futures
 import fcntl
+import functools
 import http.client
 import json
 import operator
 import os
 import re
+import socket
 import sys
 import urllib.request
 
@@ -38,6 +40,8 @@ user_agent = 'github-vanity (https://github.com/jwilk/github-vanity)'
 max_workers = 8
 
 prog = os.path.basename(sys.argv[0])
+
+socket.getaddrinfo = functools.lru_cache(maxsize=None)(socket.getaddrinfo)
 
 def create_cache_dir():
     path = os.getenv('XDG_CACHE_HOME', '')
