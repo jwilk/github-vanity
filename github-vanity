@@ -55,7 +55,7 @@ def format_user_name(user):
     template = '<{login}>'
     if user.get('name') is not None:
         template = '{name} ' + template
-    return template.format(**user)
+    return template.format_map(user)
 
 class Dumper():
 
