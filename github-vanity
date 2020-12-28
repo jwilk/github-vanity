@@ -34,7 +34,9 @@ import socket
 import sys
 import urllib.request
 
-type(lambda: (yield from []))  # Python >= 3.3 is required
+type(lambda: (yield from []))  # Python >= 3.4.3 is required
+if sys.version_info < (3, 4, 3):
+    raise RuntimeError('Python >= 3.4.3 is required')
 
 user_agent = 'github-vanity (https://github.com/jwilk/github-vanity)'
 max_workers = 8
@@ -131,11 +133,8 @@ class Dumper():
         else:
             headers['If-None-Match'] = cached['etag']
         request = urllib.request.Request(url, headers=headers)
-        ca_options = {}
-        if sys.version_info < (3, 4, 3):
-            ca_options.update(cadefault=True)
         try:
-            response = urllib.request.urlopen(request, **ca_options)
+            response = urllib.request.urlopen(request)
         except urllib.error.HTTPError as exc:
             if exc.code == 304:
                 return cached
