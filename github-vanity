@@ -73,12 +73,12 @@ class Dumper():
 
     def __enter__(self):
         if self.lock_fd is not None:
-            raise RuntimeError('{self!r} is already locked'.format(self=self))
+            raise RuntimeError(f'{self!r} is already locked')
         self.lock_fd = os.open(self.cache_dir, os.O_RDONLY)
         try:
             fcntl.flock(self.lock_fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
         except BlockingIOError:
-            print('{prog}: waiting for the lock...'.format(prog=prog), end='', file=sys.stderr)
+            print(f'{prog}: waiting for the lock...', end='', file=sys.stderr)
             sys.stderr.flush()
             fcntl.flock(self.lock_fd, fcntl.LOCK_EX)
             print('', file=sys.stderr)
@@ -161,7 +161,7 @@ class Dumper():
                 yield data
 
     def get_list(self, url, per_page=100):
-        url = '{url}?per_page={n}'.format(url=url, n=per_page)
+        url = f'{url}?per_page={per_page}'
         data = []
         while True:
             result = self._get(url, needs={'links'})
@@ -178,7 +178,7 @@ class Dumper():
                 yield data
 
     def get_user(self, login):
-        url = 'https://api.github.com/users/{login}'.format(login=login)
+        url = f'https://api.github.com/users/{login}'
         return self.get(url)
 
     def async_get_users(self, logins):
@@ -188,7 +188,7 @@ class Dumper():
 
     def dump_followers(self, login):
         print('followers:')
-        url = 'https://api.github.com/users/{login}/followers'.format(login=login)
+        url = f'https://api.github.com/users/{login}/followers'
         followers = self.get_list(url)
         users = self.async_get_users(
             follower['login']
@@ -208,7 +208,7 @@ class Dumper():
     def dump_repositories(self, login):
         print('repositories:')
         print()
-        url = 'https://api.github.com/users/{login}/repos'.format(login=login)
+        url = f'https://api.github.com/users/{login}/repos'
         repos = self.get_list(url)
         repos = sorted(repos, key=operator.itemgetter('name'))
         repos_stargazers = self.async_get_lists(
@@ -238,7 +238,7 @@ class Dumper():
             self.cache['#repo'][login][repo_name] = users
             if not users:
                 continue
-            print('  {repo}:'.format(repo=repo_name))
+            print(f'  {repo_name}:')
             for user in users:
                 print('  -', user)
             print()
