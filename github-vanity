@@ -34,9 +34,7 @@ import socket
 import sys
 import urllib.request
 
-type(lambda: (yield from []))  # Python >= 3.4.3 is required
-if sys.version_info < (3, 4, 3):
-    raise RuntimeError('Python >= 3.4.3 is required')
+int(0_0)  # Python >= 3.6 is required
 
 user_agent = 'github-vanity (https://github.com/jwilk/github-vanity)'
 max_workers = 8
