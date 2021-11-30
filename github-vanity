@@ -157,8 +157,7 @@ class Dumper():
 
     def async_get(self, urls):
         with concurrent.futures.ThreadPoolExecutor(max_workers=max_workers) as executor:
-            for data in executor.map(self.get, urls):
-                yield data
+            yield from executor.map(self.get, urls)
 
     def get_list(self, url, per_page=100):
         url = f'{url}?per_page={per_page}'
@@ -174,8 +173,7 @@ class Dumper():
 
     def async_get_lists(self, urls):
         with concurrent.futures.ThreadPoolExecutor(max_workers=max_workers) as executor:
-            for data in executor.map(self.get_list, urls):
-                yield data
+            yield from executor.map(self.get_list, urls)
 
     def get_user(self, login):
         url = f'https://api.github.com/users/{login}'
@@ -183,8 +181,7 @@ class Dumper():
 
     def async_get_users(self, logins):
         with concurrent.futures.ThreadPoolExecutor(max_workers=max_workers) as executor:
-            for user in executor.map(self.get_user, logins):
-                yield user
+            yield from executor.map(self.get_user, logins)
 
     def dump_followers(self, login):
         print('followers:')
