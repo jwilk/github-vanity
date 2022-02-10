@@ -28,10 +28,7 @@ jobs:
         python-version: ${{matrix.python}}
     - name: smoke test
       run: |
-        ./github-vanity --help
-        ./github-vanity bedevere-bot
-      env:
-        PYTHONWARNINGS: d
+        make test network=1
     - name: run pydiatra
       run: |
         python3 -m pip install pydiatra
