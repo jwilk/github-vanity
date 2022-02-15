@@ -40,8 +40,7 @@ jobs:
     - name: run pylint
       run: |
         python3 -m pip install pylint
-        # work-around for <https://github.com/GrahamDumpleton/wrapt/issues/196>:
-        sed -i -e 's/, formatargspec$//' ${{env.pythonLocation}}/lib/python*/site-packages/wrapt/decorators.py
         python3 -m pylint github-vanity
+      if: matrix.python != '3.11-dev'
 
 # vim:ts=2 sts=2 sw=2 et
