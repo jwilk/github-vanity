@@ -166,13 +166,14 @@ class Dumper():
         with concurrent.futures.ThreadPoolExecutor(max_workers=max_workers) as executor:
             yield from executor.map(self.get_user, logins)
 
-    def dump_followers(self, login):
+    def dump_followers(self, login, ignored=()):
         print('followers:')
         url = f'https://api.github.com/users/{login}/followers'
         followers = self.get_list(url)
         users = self.async_get_users(
             follower['login']
             for follower in followers
+            if follower['login'] not in ignored
         )
         users = sorted(users, key=operator.itemgetter('login'))
         users = [
@@ -185,7 +186,7 @@ class Dumper():
             print('-', user)
         print()
 
-    def dump_repositories(self, login):
+    def dump_repositories(self, login, ignored=()):
         print('repositories:')
         print()
         url = f'https://api.github.com/users/{login}/repos'
@@ -203,6 +204,7 @@ class Dumper():
                     u['login']
                     for u in users
                     if u['login'] != login
+                    and u['login'] not in ignored
                 }
             users = self.async_get_users(
                 userset(stargazers) | userset(subscribers)
@@ -223,23 +225,25 @@ class Dumper():
                 print('  -', user)
             print()
 
-    def dump(self, login):
-        self.dump_followers(login)
-        self.dump_repositories(login)
+    def dump(self, login, ignored=()):
+        self.dump_followers(login, ignored=ignored)
+        self.dump_repositories(login, ignored=ignored)
 
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument('--debug', action='store_true')
+    ap.add_argument('--ignore', metavar='USER', action='append')
     ap.add_argument('user', metavar='USER', nargs='+')
     options = ap.parse_args()
     if options.debug:
         http.client.HTTPConnection.debuglevel = 1
+    ignored = set(options.ignore or [])
     with Dumper() as dumper:
         for n, user in enumerate(options.user):
             if n > 0:
                 print('---')
                 print()
-            dumper.dump(user)
+            dumper.dump(user, ignored=ignored)
 
 if __name__ == '__main__':
     main()
