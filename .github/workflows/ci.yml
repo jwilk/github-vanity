@@ -39,6 +39,5 @@ jobs:
       run: |
         python3 -m pip install pylint
         python3 -m pylint github-vanity
-      if: matrix.python != '3.11-dev'
 
 # vim:ts=2 sts=2 sw=2 et
