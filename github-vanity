@@ -247,12 +247,16 @@ class Dumper():
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument('--debug', action='store_true')
-    ap.add_argument('user', metavar='USER')
+    ap.add_argument('user', metavar='USER', nargs='+')
     options = ap.parse_args()
     if options.debug:
         http.client.HTTPConnection.debuglevel = 1
     with Dumper() as dumper:
-        dumper.dump(options.user)
+        for n, user in enumerate(options.user):
+            if n > 0:
+                print('---')
+                print()
+            dumper.dump(user)
 
 if __name__ == '__main__':
     main()
