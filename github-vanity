@@ -19,7 +19,6 @@ import urllib.request
 
 int(0_0)  # Python >= 3.6 is required
 
-user_agent = 'github-vanity (https://github.com/jwilk/github-vanity)'
 max_workers = 8
 
 prog = os.path.basename(sys.argv[0])
@@ -46,6 +45,9 @@ def format_user_name(user):
 
 class Dumper():
 
+    headers = {
+        'User-Agent': 'github-vanity (https://github.com/jwilk/github-vanity)'
+    }
     debug_level = 0
 
     def __init__(self):
@@ -117,7 +119,7 @@ class Dumper():
         return urllib.request.build_opener(*handlers)
 
     def _get(self, url, needs=()):
-        headers = {'User-Agent': user_agent}
+        headers = dict(self.headers)
         if self.authorization is not None:
             headers['Authorization'] = self.authorization
         try:
