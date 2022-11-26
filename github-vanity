@@ -5,10 +5,10 @@
 # SPDX-License-Identifier: MIT
 
 import argparse
+import builtins
 import concurrent.futures
 import fcntl
 import functools
-import http.client
 import json
 import operator
 import os
@@ -26,6 +26,10 @@ prog = os.path.basename(sys.argv[0])
 
 socket.getaddrinfo = functools.lru_cache(maxsize=None)(socket.getaddrinfo)
 
+# Let's trick http.client into writing debugging stuff to stderr, not stdout.
+print = functools.partial(builtins.print, file=sys.stdout)
+sys.stdout = sys.stderr
+
 def create_cache_dir():
     path = os.getenv('XDG_CACHE_HOME', '')
     if not path.startswith('/'):
@@ -41,6 +45,8 @@ def format_user_name(user):
     return template.format_map(user)
 
 class Dumper():
+
+    debug_level = 0
 
     def __init__(self):
         self.cache_dir = create_cache_dir()
@@ -101,6 +107,15 @@ class Dumper():
             data = data.decode('UTF-8')
             return json.loads(data)
 
+    def _build_opener(self):
+        # TODO: Get rid of this function once
+        # <https://github.com/python/cpython/issues/99352> is fixed.
+        handlers = [
+            Handler(debuglevel=self.debug_level)
+            for Handler in [urllib.request.HTTPHandler, urllib.request.HTTPSHandler]
+        ]
+        return urllib.request.build_opener(*handlers)
+
     def _get(self, url, needs=()):
         headers = {'User-Agent': user_agent}
         if self.authorization is not None:
@@ -114,8 +129,9 @@ class Dumper():
         else:
             headers['If-None-Match'] = cached['etag']
         request = urllib.request.Request(url, headers=headers)
+        opener = self._build_opener()
         try:
-            response = urllib.request.urlopen(request)  # pylint: disable=bad-option-value,consider-using-with
+            response = opener.open(request)  # pylint: disable=bad-option-value,consider-using-with
         except urllib.error.HTTPError as exc:
             if exc.code == 304:
                 return cached
@@ -236,7 +252,7 @@ def main():
     ap.add_argument('user', metavar='USER', nargs='+')
     options = ap.parse_args()
     if options.debug:
-        http.client.HTTPConnection.debuglevel = 1
+        Dumper.debug_level = 1
     ignored = set(options.ignore or [])
     with Dumper() as dumper:
         for n, user in enumerate(options.user):
