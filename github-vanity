@@ -19,8 +19,6 @@ import urllib.request
 
 int(0_0)  # Python >= 3.6 is required
 
-max_workers = 8
-
 prog = os.path.basename(sys.argv[0])
 
 socket.getaddrinfo = functools.lru_cache(maxsize=None)(socket.getaddrinfo)
@@ -48,6 +46,7 @@ class Dumper():
     headers = {
         'User-Agent': 'github-vanity (https://github.com/jwilk/github-vanity)'
     }
+    max_workers = 8
     debug_level = 0
 
     def __init__(self):
@@ -157,7 +156,7 @@ class Dumper():
         return self._get(url)['data']
 
     def async_get(self, urls):
-        with concurrent.futures.ThreadPoolExecutor(max_workers=max_workers) as executor:
+        with concurrent.futures.ThreadPoolExecutor(max_workers=self.max_workers) as executor:
             yield from executor.map(self.get, urls)
 
     def get_list(self, url, per_page=100):
@@ -173,7 +172,7 @@ class Dumper():
         return data
 
     def async_get_lists(self, urls):
-        with concurrent.futures.ThreadPoolExecutor(max_workers=max_workers) as executor:
+        with concurrent.futures.ThreadPoolExecutor(max_workers=self.max_workers) as executor:
             yield from executor.map(self.get_list, urls)
 
     def get_user(self, login):
@@ -181,7 +180,7 @@ class Dumper():
         return self.get(url)
 
     def async_get_users(self, logins):
-        with concurrent.futures.ThreadPoolExecutor(max_workers=max_workers) as executor:
+        with concurrent.futures.ThreadPoolExecutor(max_workers=self.max_workers) as executor:
             yield from executor.map(self.get_user, logins)
 
     def dump_followers(self, login, ignored=()):
