@@ -248,8 +248,8 @@ class Dumper():
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument('--debug', action='store_true')
     ap.add_argument('--ignore', metavar='USER', action='append')
+    ap.add_argument('--debug', action='store_true')
     ap.add_argument('user', metavar='USER', nargs='+')
     options = ap.parse_args()
     if options.debug:
