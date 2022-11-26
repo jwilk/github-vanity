@@ -249,10 +249,11 @@ class Dumper():
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument('--ignore', metavar='USER', action='append', help='ignore this user')
-    ap.add_argument('--max-connections', metavar='N', default=Dumper.max_workers,
+    gr = ap.add_argument_group('advanced options')
+    gr.add_argument('--max-connections', metavar='N', default=Dumper.max_workers,
         help=f'max number of parallel connections (default: {Dumper.max_workers})', type=int
     )
-    ap.add_argument('--debug', action='store_true', help='enable HTTP debugging')
+    gr.add_argument('--debug', action='store_true', help='enable HTTP debugging')
     ap.add_argument('user', metavar='USER', nargs='+', help='user (or organization) to look after')
     options = ap.parse_args()
     if options.debug:
