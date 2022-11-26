@@ -35,6 +35,8 @@ jobs:
     - name: smoke test
       run: |
         make test network=1
+      env:
+        GITHUB_VANITY_TOKEN: ${{secrets.GITHUB_TOKEN}}
     - name: run pydiatra
       run: |
         python3 -m pip install pydiatra
