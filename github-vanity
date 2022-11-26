@@ -248,9 +248,9 @@ class Dumper():
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument('--ignore', metavar='USER', action='append')
-    ap.add_argument('--debug', action='store_true')
-    ap.add_argument('user', metavar='USER', nargs='+')
+    ap.add_argument('--ignore', metavar='USER', action='append', help='ignore this user')
+    ap.add_argument('--debug', action='store_true', help='enable HTTP debugging')
+    ap.add_argument('user', metavar='USER', nargs='+', help='user (or organization) to look after')
     options = ap.parse_args()
     if options.debug:
         Dumper.debug_level = 1
