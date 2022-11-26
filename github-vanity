@@ -24,7 +24,7 @@ prog = os.path.basename(sys.argv[0])
 socket.getaddrinfo = functools.lru_cache(maxsize=None)(socket.getaddrinfo)
 
 # Let's trick http.client into writing debugging stuff to stderr, not stdout.
-print = functools.partial(builtins.print, file=sys.stdout)
+print = functools.partial(builtins.print, file=sys.stdout)  # pylint: disable=redefined-builtin
 sys.stdout = sys.stderr
 
 def create_cache_dir():
