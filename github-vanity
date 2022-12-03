@@ -184,7 +184,7 @@ class Dumper():
             yield from executor.map(self.get_user, logins)
 
     def dump_followers(self, login, ignored=()):
-        print('followers:')
+        print(f'{login}:')
         url = f'https://api.github.com/users/{login}/followers'
         followers = self.get_list(url)
         users = self.async_get_users(
@@ -204,8 +204,6 @@ class Dumper():
         print()
 
     def dump_repositories(self, login, ignored=()):
-        print('repositories:')
-        print()
         url = f'https://api.github.com/users/{login}/repos'
         repos = self.get_list(url)
         repos = sorted(repos, key=operator.itemgetter('name'))
@@ -237,9 +235,9 @@ class Dumper():
             self.cache['#repo'][login][repo_name] = users
             if not users:
                 continue
-            print(f'  {repo_name}:')
+            print(f'{login}/{repo_name}:')
             for user in users:
-                print('  -', user)
+                print('-', user)
             print()
 
     def dump(self, login, ignored=()):
@@ -261,10 +259,7 @@ def main():
     Dumper.max_workers = options.max_connections
     ignored = set(options.ignore or [])
     with Dumper() as dumper:
-        for n, user in enumerate(options.user):
-            if n > 0:
-                print('---')
-                print()
+        for user in options.user:
             dumper.dump(user, ignored=ignored)
 
 if __name__ == '__main__':
