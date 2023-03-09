@@ -37,6 +37,9 @@ jobs:
         make test network=1
       env:
         GITHUB_VANITY_TOKEN: ${{secrets.GITHUB_TOKEN}}
+    - name: run shellcheck
+      run: |
+        shellcheck t/*.t
     - name: run pydiatra
       run: |
         python3 -m pip install pydiatra
