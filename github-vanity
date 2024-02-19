@@ -27,12 +27,28 @@ socket.getaddrinfo = functools.lru_cache(maxsize=None)(socket.getaddrinfo)
 print = functools.partial(builtins.print, file=sys.stdout)  # pylint: disable=redefined-builtin
 sys.stdout = sys.stderr
 
+def makedirs700(path):
+    # TODO: Get rid of this function once
+    # https://github.com/python/cpython/issues/86533
+    # ("Restore os.makedirs ability to apply mode to all directories created")
+    # is fixed.
+    if os.path.isdir(path):
+        return
+    head, tail = os.path.split(path)
+    if head:
+        makedirs700(head)
+    try:
+        os.mkdir(path, 0o700)
+    except OSError:
+        if not os.path.isdir(path):
+            raise
+
 def create_cache_dir():
     path = os.getenv('XDG_CACHE_HOME', '')
     if not path.startswith('/'):
         path = os.path.join(os.path.expanduser('~'), '.cache')
     path = os.path.join(path, 'github-vanity')
-    os.makedirs(path, 0o700, exist_ok=True)
+    makedirs700(path)
     return path
 
 def format_user_name(user):
