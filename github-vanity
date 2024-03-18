@@ -57,7 +57,7 @@ def format_user_name(user):
         template = '{name} ' + template
     return template.format_map(user)
 
-class Dumper():
+class Dumper:
 
     headers = {
         'User-Agent': 'github-vanity (https://github.com/jwilk/github-vanity)'
