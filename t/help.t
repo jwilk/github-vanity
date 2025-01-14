@@ -9,7 +9,7 @@ pdir="${0%/*}/.."
 prog="$pdir/github-vanity"
 
 echo 1..1
-: "${PYTHONWARNINGS=d}"
+export PYTHONWARNINGS="${PYTHONWARNINGS-d}"
 out=$("$prog" --help)
 sed -e 's/^/# /' <<EOF
 $out
