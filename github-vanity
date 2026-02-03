@@ -264,6 +264,7 @@ class Dumper:
 
 def main():
     ap = argparse.ArgumentParser()
+    ap.color = False
     ap.add_argument('--ignore', metavar='USER', action='append', help='ignore this user')
     gr = ap.add_argument_group('advanced options')
     gr.add_argument('--max-connections', metavar='N', default=Dumper.max_workers,
